@@ -1,0 +1,300 @@
+{% extends 'base.html' %}
+{% set active_page = 'predict' %}
+
+{% block content %}
+<div class="predictor-page-container">
+    <div class="predictor-grid">
+        <!-- Input Form Section -->
+        <div class="form-container-card glass">
+            <div class="card-header-with-preset">
+                <h2>Predictive Parameters</h2>
+                <div class="presets-wrapper">
+                    <span class="preset-label">Test Presets:</span>
+                    <button type="button" class="preset-btn" onclick="applyPreset('safe')">Sunny Days</button>
+                    <button type="button" class="preset-btn" onclick="applyPreset('moderate')">Mild Monsoon</button>
+                    <button type="button" class="preset-btn danger-preset" onclick="applyPreset('extreme')">Storm Warning</button>
+                </div>
+            </div>
+            <p class="form-instructions">Enter current regional weather telemetry or select a preset to compute inundation risks.</p>
+            
+            {% if session.get('user').role == 'Analyst' %}
+            <div class="alert-box alert-error" style="margin-bottom: 20px;">
+                <i class="fa-solid fa-lock"></i>
+                <span><strong>Access Restricted:</strong> You are signed in as a <strong>Data Analyst</strong>. Only Meteorologists can execute new predictions. You can view presets, but inputs are locked.</span>
+            </div>
+            {% endif %}
+            
+            <form id="flood-predict-form" class="predict-form" novalidate>
+                <fieldset {% if session.get('user').role == 'Analyst' %}disabled style="border: none; padding: 0; margin: 0;"{% else %}style="border: none; padding: 0; margin: 0;"{% endif %}>
+                    <div class="form-group-row">
+                        <div class="form-group">
+                            <label for="Annual_Rainfall">Annual Rainfall (mm)</label>
+                            <input type="number" id="Annual_Rainfall" name="Annual_Rainfall" min="1000" max="4500" placeholder="e.g. 2400" required>
+                            <span class="range-info">Range: 1000 - 4500 mm</span>
+                            <div class="error-msg">Please enter a value between 1000 and 4500.</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="Seasonal_Rainfall">Seasonal Rainfall (mm)</label>
+                            <input type="number" id="Seasonal_Rainfall" name="Seasonal_Rainfall" min="200" max="1500" placeholder="e.g. 800" required>
+                            <span class="range-info">Range: 200 - 1500 mm</span>
+                            <div class="error-msg">Please enter a value between 200 and 1500.</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group-row">
+                        <div class="form-group">
+                            <label for="Cloud_Cover">Cloud Cover (%)</label>
+                            <input type="number" id="Cloud_Cover" name="Cloud_Cover" min="10" max="100" placeholder="e.g. 65" required>
+                            <span class="range-info">Range: 10 - 100%</span>
+                            <div class="error-msg">Please enter a value between 10 and 100.</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="Humidity">Humidity (%)</label>
+                            <input type="number" id="Humidity" name="Humidity" min="30" max="100" placeholder="e.g. 80" required>
+                            <span class="range-info">Range: 30 - 100%</span>
+                            <div class="error-msg">Please enter a value between 30 and 100.</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group-row">
+                        <div class="form-group">
+                            <label for="Temperature">Temperature (&deg;C)</label>
+                            <input type="number" step="0.1" id="Temperature" name="Temperature" min="10" max="45" placeholder="e.g. 28.5" required>
+                            <span class="range-info">Range: 10 - 45 &deg;C</span>
+                            <div class="error-msg">Please enter a value between 10 and 45.</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="Visibility">Visibility (km)</label>
+                            <input type="number" step="0.1" id="Visibility" name="Visibility" min="1" max="15" placeholder="e.g. 10" required>
+                            <span class="range-info">Range: 1 - 15 km</span>
+                            <div class="error-msg">Please enter a value between 1 and 15.</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group-row">
+                        <div class="form-group">
+                            <label for="Pressure">Atmospheric Pressure (hPa)</label>
+                            <input type="number" id="Pressure" name="Pressure" min="980" max="1030" placeholder="e.g. 1008" required>
+                            <span class="range-info">Range: 980 - 1030 hPa</span>
+                            <div class="error-msg">Please enter a value between 980 and 1030.</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="Wind_Speed">Wind Speed (km/h)</label>
+                            <input type="number" step="0.1" id="Wind_Speed" name="Wind_Speed" min="0" max="80" placeholder="e.g. 18.2" required>
+                            <span class="range-info">Range: 0 - 80 km/h</span>
+                            <div class="error-msg">Please enter a value between 0 and 80.</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group-row">
+                        <div class="form-group">
+                            <label for="River_Level">River Level (m)</label>
+                            <input type="number" step="0.01" id="River_Level" name="River_Level" min="0.5" max="8.0" placeholder="e.g. 2.1" required>
+                            <span class="range-info">Range: 0.5 - 8.0 m (Critical > 5.0m)</span>
+                            <div class="error-msg">Please enter a value between 0.5 and 8.0.</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="Soil_Moisture">Soil Moisture (%)</label>
+                            <input type="number" id="Soil_Moisture" name="Soil_Moisture" min="10" max="90" placeholder="e.g. 45" required>
+                            <span class="range-info">Range: 10 - 90%</span>
+                            <div class="error-msg">Please enter a value between 10 and 90.</div>
+                        </div>
+                    </div>
+                </fieldset>
+
+                {% if session.get('user').role == 'Analyst' %}
+                <button type="button" class="btn btn-secondary btn-block" style="cursor: not-allowed; opacity: 0.75;" disabled>
+                    <span class="btn-text">Prediction Locked for Analysts</span>
+                    <i class="fa-solid fa-lock icon-right"></i>
+                </button>
+                {% else %}
+                <button type="submit" class="btn btn-primary btn-block">
+                    <span class="btn-text">Execute Flood Prediction</span>
+                    <i class="fa-solid fa-bolt icon-right"></i>
+                </button>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- Dynamic Output Section -->
+        <div class="output-container-card glass">
+            <!-- Initial State (Waiting for input) -->
+            <div id="result-placeholder" class="result-state-view active">
+                <div class="placeholder-content">
+                    <div class="radar-scanner-wrapper">
+                        <div class="radar-dot"></div>
+                        <div class="radar-ring"></div>
+                    </div>
+                    <h3>Awaiting Meteorological Input</h3>
+                    <p>Provide weather readings and click 'Execute Flood Prediction' to compute risk indicators, probability, and disaster response guidelines.</p>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="result-loading" class="result-state-view">
+                <div class="loading-content">
+                    <div class="spinner-modern"></div>
+                    <h3>Running Predictive Algorithms</h3>
+                    <p id="loading-model-name">Consulting best-fit Machine Learning model...</p>
+                </div>
+            </div>
+
+            <!-- Prediction Result Card -->
+            <div id="result-output" class="result-state-view result-card-details">
+                <div class="result-header">
+                    <div class="result-risk-badge" id="output-risk-badge">Moderate Risk</div>
+                    <div class="result-timestamp" id="output-timestamp">Mon, 13:21</div>
+                </div>
+
+                <div class="result-gauge-section">
+                    <!-- SVG Gauge -->
+                    <div class="gauge-meter-wrapper">
+                        <svg class="gauge-svg" viewBox="0 0 100 50">
+                            <path class="gauge-bg-track" d="M 10,50 A 40,40 0 0,1 90,50" fill="none" stroke="#e2e8f0" stroke-width="10" stroke-linecap="round" />
+                            <path class="gauge-fill-track" id="gauge-fill" d="M 10,50 A 40,40 0 0,1 90,50" fill="none" stroke="#fbbf24" stroke-width="10" stroke-linecap="round" stroke-dasharray="125.6" stroke-dashoffset="125.6" />
+                        </svg>
+                        <div class="gauge-score">
+                            <span class="score-val" id="output-probability">0%</span>
+                            <span class="score-label">Probability</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-summary-metrics">
+                    <div class="metric-cell">
+                        <span class="cell-label">Verdict</span>
+                        <span class="cell-val text-accent" id="output-verdict">Flood Anticipated</span>
+                    </div>
+                    <div class="divider-v"></div>
+                    <div class="metric-cell">
+                        <span class="cell-label">Confidence</span>
+                        <span class="cell-val" id="output-confidence">92.4%</span>
+                    </div>
+                </div>
+
+                <div class="result-details-text">
+                    <div class="detail-icon"><i class="fa-solid fa-cloud-showers-heavy"></i></div>
+                    <div class="detail-body">
+                        <h4>Environmental Analysis</h4>
+                        <p id="output-weather-summary">Severe localized precipitation combined with saturated soil conditions and high river gauge heights creates critical conditions.</p>
+                    </div>
+                </div>
+
+                <div class="action-advisory-card">
+                    <div class="advisory-title">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                        <span>Recommended Advisory Protocol</span>
+                    </div>
+                    <p id="output-action-advisory">Deploy emergency flood barriers along major river arteries and alert disaster response teams for potential rescue operations in low zones.</p>
+                </div>
+
+                <div class="result-card-actions">
+                    <a href="#" id="download-report-btn" class="btn btn-secondary btn-icon-only" target="_blank">
+                        <i class="fa-solid fa-file-pdf"></i> Download PDF Dispatch
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Log Table -->
+    <div class="history-container glass">
+        <div class="history-header">
+            <div class="history-header-title">
+                <h2>Prediction Audit Ledger</h2>
+                <p>Auditable log of predictions run during the active session.</p>
+            </div>
+            <a href="/history/download" class="btn btn-secondary">
+                <i class="fa-solid fa-file-csv"></i> Export CSV Log
+            </a>
+        </div>
+        <div class="table-wrapper">
+            <table class="history-table" id="history-table">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Model</th>
+                        <th>River Lvl</th>
+                        <th>Rainfall</th>
+                        <th>Humidity</th>
+                        <th>Probability</th>
+                        <th>Risk Level</th>
+                        <th>Outcome</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="history-tbody">
+                    <!-- History logs injected here -->
+                    <tr class="empty-row">
+                        <td colspan="9">No prediction logs recorded yet. Execute a prediction to record a ledger entry.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Presets for the prediction form
+    const presets = {
+        safe: {
+            Annual_Rainfall: 1200,
+            Seasonal_Rainfall: 350,
+            Cloud_Cover: 20,
+            Humidity: 45,
+            Temperature: 32.4,
+            Visibility: 12,
+            Pressure: 1018,
+            Wind_Speed: 8.5,
+            River_Level: 1.25,
+            Soil_Moisture: 25
+        },
+        moderate: {
+            Annual_Rainfall: 2400,
+            Seasonal_Rainfall: 750,
+            Cloud_Cover: 68,
+            Humidity: 78,
+            Temperature: 24.2,
+            Visibility: 8,
+            Pressure: 1006,
+            Wind_Speed: 21.0,
+            River_Level: 3.42,
+            Soil_Moisture: 60
+        },
+        extreme: {
+            Annual_Rainfall: 4200,
+            Seasonal_Rainfall: 1350,
+            Cloud_Cover: 95,
+            Humidity: 96,
+            Temperature: 19.8,
+            Visibility: 2.5,
+            Pressure: 988,
+            Wind_Speed: 52.4,
+            River_Level: 6.85,
+            Soil_Moisture: 88
+        }
+    };
+
+    function applyPreset(type) {
+        const preset = presets[type];
+        if (!preset) return;
+        
+        for (const [key, value] of Object.entries(preset)) {
+            const input = document.getElementById(key);
+            if (input) {
+                input.value = value;
+                input.classList.remove('invalid');
+                const formGroup = input.closest('.form-group');
+                if (formGroup) formGroup.classList.remove('has-error');
+            }
+        }
+    }
+</script>
+{% endblock %}

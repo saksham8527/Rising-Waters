@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rising Waters — Flood Prediction System</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/logo.svg') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/logo.svg') }}">
+
+    <!-- Premium Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Core style.css stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    {% block head %}{% endblock %}
+
+    <style>
+        .user-badge-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .role-user-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            color: var(--color-text-main);
+        }
+
+        .role-user-badge i {
+            font-size: 16px;
+            color: var(--color-primary);
+        }
+
+        .role-user-badge.role-admin {
+            border-color: rgba(168, 85, 247, 0.4);
+            background: rgba(168, 85, 247, 0.08);
+        }
+
+        .role-user-badge.role-admin i {
+            color: #9333ea;
+        }
+
+        .role-user-badge.role-admin .user-role-label {
+            background: #faf5ff;
+            color: #7e22ce;
+            border-color: #d8b4fe;
+        }
+
+        .role-user-badge.role-meteorologist {
+            border-color: rgba(16, 185, 129, 0.4);
+            background: rgba(16, 185, 129, 0.08);
+        }
+
+        .role-user-badge.role-meteorologist i {
+            color: #059669;
+        }
+
+        .role-user-badge.role-meteorologist .user-role-label {
+            background: #ecfdf5;
+            color: #047857;
+            border-color: #a7f3d0;
+        }
+
+        .role-user-badge.role-analyst {
+            border-color: rgba(14, 165, 233, 0.4);
+            background: rgba(14, 165, 233, 0.08);
+        }
+
+        .role-user-badge.role-analyst i {
+            color: #0284c7;
+        }
+
+        .role-user-badge.role-analyst .user-role-label {
+            background: #f0f9ff;
+            color: #0369a1;
+            border-color: #bae6fd;
+        }
+
+        .user-name-text {
+            font-weight: 600;
+        }
+
+        .user-role-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 1px 6px;
+            border-radius: 100px;
+            font-weight: 600;
+            border: 1px solid transparent;
+        }
+
+        .logout-btn {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .logout-btn:hover {
+            background: #ef4444;
+            color: #ffffff;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+        }
+    </style>
+</head>
+
+<body class="theme-default">
+    <!-- Fluid Animated Water Background Layer -->
+    <div class="water-bg-container">
+        <div class="wave wave-1"></div>
+        <div class="wave wave-2"></div>
+        <div class="wave wave-3"></div>
+    </div>
+
+    <!-- Header / Navigation Bar -->
+    <header class="app-header">
+        <div class="header-container">
+            <a href="/" class="brand-logo">
+                <div class="logo-icon-wrapper">
+                    <!-- Custom Water Ripple Logo -->
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M12 2C12 2 6 8.5 6 12C6 15.3137 8.68629 18 12 18C15.3137 18 18 15.3137 18 12C18 8.5 12 2 12 2Z"
+                            fill="currentColor" fill-opacity="0.2" />
+                        <path d="M12 4L6.34 9.66C5.46 10.54 5 11.71 5 12.95C5 14.2 5.46 15.36 6.34 16.24L12 21.9"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M12 21.9L17.66 16.24C18.54 15.36 19 14.19 19 12.95C19 11.7 18.54 10.54 17.66 9.66L12 4"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M7.5 13.5C7.5 13.5 10 16 12 16C14 16 16.5 13.5 16.5 13.5" stroke="currentColor"
+                            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <span class="title-main">Rising Waters</span>
+                    <span class="title-sub">Meteorological Flood Analytics</span>
+                </div>
+            </a>
+
+            {% if session.get('user') %}
+            <nav class="main-nav">
+                <a href="/" class="nav-item {% if active_page == 'index' %}active{% endif %}">
+                    <i class="fa-solid fa-chart-line"></i> Dashboard
+                </a>
+                {% if session.get('user').role in ['Admin', 'Meteorologist'] %}
+                <a href="/predict" class="nav-item {% if active_page == 'predict' %}active{% endif %}">
+                    <i class="fa-solid fa-umbrella"></i> Predictor
+                </a>
+                {% endif %}
+                {% if session.get('user').role in ['Admin', 'Analyst'] %}
+                <a href="/about" class="nav-item {% if active_page == 'about' %}active{% endif %}">
+                    <i class="fa-solid fa-brain"></i> Model Insights
+                </a>
+                {% endif %}
+            </nav>
+
+            <div class="user-badge-wrapper">
+                <div class="role-user-badge role-{{ session.get('user').role.lower() }}">
+                    <i class="fa-solid fa-circle-user"></i>
+                    <span class="user-name-text">{{ session.get('user').full_name }}</span>
+                    <span class="user-role-label">{{ session.get('user').role }}</span>
+                </div>
+                <a href="/logout" class="logout-btn" title="Log Out">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </a>
+            </div>
+            {% else %}
+            <div class="system-status">
+                <span class="status-indicator online"></span>
+                <span class="status-text">ML System Active</span>
+            </div>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="app-main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+        <div class="footer-container">
+            <div class="footer-info">
+                <h4>Rising Waters System</h4>
+                <p>Rising Waters is an intelligent flood prediction platform designed to analyze weather and
+                    environmental conditions using advanced machine learning techniques. The system provides accurate
+                    flood risk assessments to support proactive disaster management, environmental monitoring, and
+                    data-driven decision-making.</p>
+            </div>
+            <div class="footer-meta">
+                <div class="meta-item">
+                    <span class="meta-label">Machine Learning Powered</span>
+                    <span class="meta-val">Predictive Flood Intelligence</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Real-Time Flood Risk Analysis</span>
+                    <span class="meta-val">Decision Support System</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Deploy Ready</span>
+                    <span class="meta-val">Scalable Web Application</span>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Rising Waters. All rights reserved. Disaster Management Research Initiative.</p>
+        </div>
+    </footer>
+
+    <!-- Chart.js and other libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

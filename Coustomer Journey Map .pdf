@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% set active_page = 'index' %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-container">
+        <div class="hero-badge">
+            <span class="badge-dot"></span>
+            <span class="badge-text">Version 2.4 (Enterprise Ready)</span>
+        </div>
+        <h1 class="hero-title">Predicting Flood Risks Through <span class="gradient-text">Machine Learning</span></h1>
+        <p class="hero-subtitle">
+            An intelligent flood risk prediction platform that leverages advanced machine learning to analyze
+            meteorological and environmental indicators. By evaluating rainfall, river levels, humidity, soil moisture,
+            atmospheric pressure, and other weather parameters, the system delivers accurate flood risk assessments to
+            support early warning systems, disaster preparedness, and informed decision-making.
+        </p>
+        <div class="hero-actions">
+            <a href="/predict" class="btn btn-primary">
+                <i class="fa-solid fa-umbrella"></i> Run Risk Predictor
+            </a>
+            <a href="/about" class="btn btn-secondary">
+                <i class="fa-solid fa-brain"></i> Explore ML Insights
+            </a>
+        </div>
+    </div>
+</section>
+
+{% if session.get('user').role == 'Admin' %}
+<!-- Admin Model Management Console -->
+<section class="admin-console-section glass"
+    style="margin-top: 30px; padding: 25px; border-radius: var(--border-radius-lg); border: 1px solid rgba(168, 85, 247, 0.25); background: rgba(168, 85, 247, 0.03); box-shadow: 0 4px 20px rgba(168, 85, 247, 0.05);">
+    <div class="admin-console-header"
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div style="text-align: left;">
+            <h2
+                style="font-family: var(--font-heading); font-size: 20px; font-weight: 700; color: #7e22ce; margin: 0 0 4px 0;">
+                <i class="fa-solid fa-user-gear"></i> Admin Model Control Desk</h2>
+            <p style="font-size: 13.5px; color: var(--color-text-muted); margin: 0;">Dynamically activate and serve
+                different trained machine learning classifiers across the API.</p>
+        </div>
+        <span class="admin-badge"
+            style="font-size: 11px; padding: 3px 10px; background: rgba(168, 85, 247, 0.15); border-radius: 100px; color: #7e22ce; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid #d8b4fe;"><i
+                class="fa-solid fa-crown"></i> Live Session</span>
+    </div>
+
+    <div class="model-cards-grid"
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;">
+        {% for m in models_list %}
+        <div class="model-select-card {% if m.is_active %}active-model{% endif %}"
+            style="padding: 16px; border-radius: var(--border-radius-md); background: #ffffff; border: 1px solid #e2e8f0; position: relative; transition: all 0.2s ease; text-align: left;">
+            <div style="font-weight: 600; font-size: 15px; color: var(--color-text-main); margin-bottom: 4px;">{{
+                m.model_name }}</div>
+            <div style="font-size: 12px; color: var(--color-text-muted); margin-bottom: 12px;">{{ m.algorithm_type }}
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <span style="font-size: 12px; color: var(--color-text-muted);">Accuracy Score:</span>
+                <strong style="font-size: 14px; color: var(--color-primary);">{{ (m.accuracy_score * 100)|round(2)
+                    }}%</strong>
+            </div>
+
+            {% if m.is_active %}
+            <button type="button" class="btn btn-block"
+                style="background: rgba(16, 185, 129, 0.1); color: #047857; border: 1px solid rgba(16, 185, 129, 0.2); font-size: 12.5px; cursor: default; font-weight: 600;"
+                disabled>
+                <i class="fa-solid fa-circle-check"></i> Active Serving
+            </button>
+            {% else %}
+            <form action="/admin/set-model" method="POST">
+                <input type="hidden" name="model_name" value="{{ m.model_name }}">
+                <button type="submit" class="btn btn-primary btn-block"
+                    style="font-size: 12.5px; padding: 8px 12px; text-decoration: none;">
+                    Activate Engine
+                </button>
+            </form>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<style>
+    .model-select-card.active-model {
+        border-color: #10b981 !important;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.1);
+        background: rgba(16, 185, 129, 0.02) !important;
+    }
+
+    .model-select-card:hover:not(.active-model) {
+        border-color: var(--color-primary) !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+    }
+</style>
+{% endif %}
+
+<!-- System Summary Statistics Dashboard Grid -->
+<section class="dashboard-stats-grid">
+    <div class="stats-card">
+        <div class="stats-header">
+            <span class="stats-title">Active Predictive Engine</span>
+            <div class="stats-icon-wrapper blue">
+                <i class="fa-solid fa-microchip"></i>
+            </div>
+        </div>
+        <div class="stats-value" id="active-model-name">{{ best_model_name }}</div>
+        <div class="stats-footer">
+            <span class="status-chip success-chip">Optimal Model Selected</span>
+        </div>
+    </div>
+
+    <div class="stats-card">
+        <div class="stats-header">
+            <span class="stats-title">System Inundation Risk</span>
+            <div class="stats-icon-wrapper green">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+        </div>
+        <div class="stats-value text-success" id="overall-status-value">Safe</div>
+        <div class="stats-footer">
+            <span class="footer-desc"><i class="fa-solid fa-circle-check"></i> All rivers under critical
+                threshold</span>
+        </div>
+    </div>
+
+    <div class="stats-card">
+        <div class="stats-header">
+            <span class="stats-title">Active Stations Monitored</span>
+            <div class="stats-icon-wrapper yellow">
+                <i class="fa-solid fa-tower-broadcast"></i>
+            </div>
+        </div>
+        <div class="stats-value">12 Stations</div>
+        <div class="stats-footer">
+            <span class="footer-desc"><i class="fa-solid fa-arrows-spin fa-spin-slow"></i> Real-time meteorological
+                feeds</span>
+        </div>
+    </div>
+
+    <div class="stats-card">
+        <div class="stats-header">
+            <span class="stats-title">Total Analytics Runs</span>
+            <div class="stats-icon-wrapper purple">
+                <i class="fa-solid fa-chart-line"></i>
+            </div>
+        </div>
+        <div class="stats-value" id="stats-total-runs">{{ total_runs }}</div>
+        <div class="stats-footer">
+            <span class="footer-desc"><i class="fa-solid fa-clock-rotate-left"></i> Logs stored in local ledger</span>
+        </div>
+    </div>
+</section>
+
+<!-- core Platform Capabilities -->
+<section class="capabilities-section">
+    <div class="section-header">
+        <h2>System Capabilities & Data Pipeline</h2>
+        <p>A rigorous implementation of the standard data science workflow for government and civil protection use
+            cases.</p>
+    </div>
+
+    <div class="capabilities-grid">
+        <div class="capability-card">
+            <div class="cap-icon-box"><i class="fa-solid fa-database"></i></div>
+            <h3>1. Meteorological Ingest</h3>
+            <p>Processes diverse weather features, including cloud indices, annual/seasonal rainfall, visibility, and
+                atmospheric pressure.</p>
+        </div>
+
+        <div class="capability-card">
+            <div class="cap-icon-box"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+            <h3>2. Dynamic Scaling</h3>
+            <p>Utilises StandardScaler fitted pipeline to scale high-variance data inputs prior to feeding target ML
+                weights.</p>
+        </div>
+
+        <div class="capability-card">
+            <div class="cap-icon-box"><i class="fa-solid fa-chart-pie"></i></div>
+            <h3>3. Ensemble Evaluation</h3>
+            <p>Trains and scores four separate ML algorithms, dynamically selecting the optimal model based on
+                classification accuracy and F1 score.</p>
+        </div>
+
+        <div class="capability-card">
+            <div class="cap-icon-box"><i class="fa-solid fa-file-pdf"></i></div>
+            <h3>4. Dispatch Advisory</h3>
+            <p>Instantly classifies risk levels, calculates confidence intervals, outputs action advisories, and
+                compiles downloadable PDF reports.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}

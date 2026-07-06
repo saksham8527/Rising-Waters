@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign in - Google Accounts</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f0f4f9;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .oauth-card {
+            background: #ffffff;
+            width: 100%;
+            max-width: 450px;
+            padding: 40px;
+            border-radius: 28px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            box-sizing: border-box;
+            border: 1px solid #e0e0e0;
+            text-align: center;
+        }
+
+        .google-logo {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .oauth-card h1 {
+            font-size: 24px;
+            font-weight: 400;
+            color: #1f1f1f;
+            margin: 0 0 8px 0;
+        }
+
+        .oauth-card p.subtitle {
+            font-size: 16px;
+            color: #1f1f1f;
+            margin: 0 0 30px 0;
+        }
+
+        .app-context {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 16px;
+            background: #f8fafc;
+            border-radius: 100px;
+            border: 1px solid #e2e8f0;
+            width: fit-content;
+            margin: 0 auto 30px auto;
+            font-size: 13.5px;
+            color: #64748b;
+        }
+
+        .app-context i {
+            margin-right: 6px;
+            color: #2563eb;
+        }
+
+        .account-list {
+            text-align: left;
+            margin-bottom: 30px;
+        }
+
+        .account-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.15s ease;
+            border: 1px solid transparent;
+            margin-bottom: 8px;
+        }
+
+        .account-item:hover {
+            background-color: #f1f5f9;
+        }
+
+        .avatar-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #e0f2fe;
+            color: #0369a1;
+            font-weight: 500;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+        }
+
+        .avatar-admin {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+        }
+
+        .avatar-meteo {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .avatar-analyst {
+            background-color: #e0f2fe;
+            color: #075985;
+        }
+
+        .account-details {
+            flex: 1;
+        }
+
+        .account-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1f1f1f;
+        }
+
+        .account-email {
+            font-size: 12px;
+            color: #5f6368;
+        }
+
+        .role-badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            background: #f1f5f9;
+            border-radius: 100px;
+            color: #475569;
+            font-weight: 500;
+            border: 1px solid #cbd5e1;
+        }
+
+        .badge-admin {
+            background: #faf5ff;
+            color: #7e22ce;
+            border-color: #d8b4fe;
+        }
+
+        .badge-meteo {
+            background: #ecfdf5;
+            color: #047857;
+            border-color: #a7f3d0;
+        }
+
+        .badge-analyst {
+            background: #f0f9ff;
+            color: #0369a1;
+            border-color: #bae6fd;
+        }
+
+        .footer {
+            font-size: 12px;
+            color: #5f6368;
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #e0e0e0;
+            padding-top: 20px;
+        }
+
+        .footer a {
+            color: #1a73e8;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        .use-another-account {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.15s ease;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1a73e8;
+        }
+
+        .use-another-account:hover {
+            background-color: #f1f5f9;
+        }
+
+        .use-another-account i {
+            margin-right: 12px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #f1f5f9;
+            color: #1a73e8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="oauth-card">
+        <div class="google-logo">
+            <svg viewBox="0 0 24 24" width="32" height="32" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    fill="#4285F4" />
+                <path
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    fill="#34A853" />
+                <path
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                    fill="#FBBC05" />
+                <path
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                    fill="#EA4335" />
+            </svg>
+        </div>
+
+        <h1>Choose an account</h1>
+        <p class="subtitle">to continue to Rising Waters</p>
+
+        <div class="app-context">
+            <i class="fa-solid fa-umbrella-beach"></i>
+            <span>risingwaters.com</span>
+        </div>
+
+        <form id="oauth-form" action="/google-callback" method="POST">
+            <input type="hidden" id="selected-email" name="email">
+            <div class="account-list">
+
+                <!-- Admin -->
+                <div class="account-item" onclick="selectAccount('admin@risingwaters.com')">
+                    <div class="avatar-circle avatar-admin">SA</div>
+                    <div class="account-details">
+                        <div class="account-name">System Admin</div>
+                        <div class="account-email">admin@risingwaters.com</div>
+                    </div>
+                    <span class="role-badge badge-admin">Admin</span>
+                </div>
+
+                <!-- Meteorologist -->
+                <div class="account-item" onclick="selectAccount('meteo@risingwaters.com')">
+                    <div class="avatar-circle avatar-meteo">LM</div>
+                    <div class="account-details">
+                        <div class="account-name">Lead Meteorologist</div>
+                        <div class="account-email">meteo@risingwaters.com</div>
+                    </div>
+                    <span class="role-badge badge-meteo">Meteorologist</span>
+                </div>
+
+                <!-- Analyst -->
+                <div class="account-item" onclick="selectAccount('analyst@risingwaters.com')">
+                    <div class="avatar-circle avatar-analyst">DA</div>
+                    <div class="account-details">
+                        <div class="account-name">Data Analyst</div>
+                        <div class="account-email">analyst@risingwaters.com</div>
+                    </div>
+                    <span class="role-badge badge-analyst">Analyst</span>
+                </div>
+
+                <!-- Use another account -->
+                <div class="use-another-account"
+                    onclick="alert('For this demo, please select one of the seeded Google accounts.')">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <span>Use another account</span>
+                </div>
+
+            </div>
+        </form>
+
+        <div class="footer">
+            <span>English (United States)</span>
+            <div style="display: flex; gap: 10px;">
+                <a href="#">Help</a>
+                <a href="#">Privacy</a>
+                <a href="#">Terms</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function selectAccount(email) {
+            document.getElementById('selected-email').value = email;
+            document.getElementById('oauth-form').submit();
+        }
+    </script>
+</body>
+
+</html>

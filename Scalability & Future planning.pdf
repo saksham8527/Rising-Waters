@@ -1,0 +1,282 @@
+/* ==========================================================================
+   Rising Waters - Client-Side Controller
+   ========================================================================== */
+
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('flood-predict-form');
+    
+    // Check if we are on the predictor page
+    if (form) {
+        form.addEventListener('submit', handlePredictSubmit);
+        
+        // Setup input validation change listeners
+        const inputs = form.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('input', () => {
+                validateInput(input);
+            });
+        });
+        
+        // Initial history load
+        fetchHistory();
+    }
+});
+
+/**
+ * Validates a single input field based on its min/max attributes
+ * @param {HTMLInputElement} input 
+ * @returns {boolean} Is valid
+ */
+function validateInput(input) {
+    const val = parseFloat(input.value);
+    const min = parseFloat(input.getAttribute('min'));
+    const max = parseFloat(input.getAttribute('max'));
+    const formGroup = input.closest('.form-group');
+    
+    let isValid = true;
+    
+    if (isNaN(val) || val < min || val > max) {
+        isValid = false;
+    }
+    
+    if (formGroup) {
+        if (!isValid) {
+            formGroup.classList.add('has-error');
+        } else {
+            formGroup.classList.remove('has-error');
+        }
+    }
+    
+    return isValid;
+}
+
+/**
+ * Validates all inputs in the prediction form
+ * @returns {boolean} Is form valid
+ */
+function validateForm() {
+    const form = document.getElementById('flood-predict-form');
+    const inputs = form.querySelectorAll('input');
+    let isFormValid = true;
+    
+    inputs.forEach(input => {
+        const isInputValid = validateInput(input);
+        if (!isInputValid) {
+            isFormValid = false;
+        }
+    });
+    
+    return isFormValid;
+}
+
+/**
+ * Intercepts submission and triggers prediction AJAX
+ * @param {Event} event 
+ */
+async function handlePredictSubmit(event) {
+    event.preventDefault();
+    
+    if (!validateForm()) {
+        return;
+    }
+    
+    const form = document.getElementById('flood-predict-form');
+    
+    // Toggle UI States: Hide Output/Placeholder, Show Loading
+    showResultState('loading');
+    
+    // Gather form payload
+    const formData = new FormData(form);
+    const payload = {};
+    formData.forEach((value, key) => {
+        payload[key] = parseFloat(value);
+    });
+    
+    try {
+        const response = await fetch('/predict', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Wait 1.2s to simulate deep neural network analysis (great UX!)
+        setTimeout(() => {
+            renderPredictionResults(data, payload);
+            showResultState('output');
+            
+            // Add new prediction to the history ledger list
+            fetchHistory();
+        }, 1200);
+        
+    } catch (error) {
+        console.error("Prediction failed:", error);
+        showResultState('placeholder');
+        alert("An error occurred while communicating with the Machine Learning backend server. Check logs.");
+    }
+}
+
+/**
+ * Configures output cards with result payload
+ * @param {object} res Result JSON
+ * @param {object} inputs User inputs
+ */
+function renderPredictionResults(res, inputs) {
+    // 1. Core text tags
+    document.getElementById('output-verdict').innerText = res.verdict;
+    document.getElementById('output-probability').innerText = `${(res.probability * 100).toFixed(1)}%`;
+    document.getElementById('output-confidence').innerText = `${(res.confidence * 100).toFixed(1)}%`;
+    document.getElementById('output-weather-summary').innerText = res.weather_summary;
+    document.getElementById('output-action-advisory').innerText = res.action_advisory;
+    
+    // 2. Setup PDF download link with full input parameters
+    const pdfBtn = document.getElementById('download-report-btn');
+    const queryParams = new URLSearchParams({
+        verdict: res.verdict,
+        probability: res.probability,
+        risk_level: res.risk_level,
+        confidence: res.confidence,
+        summary: res.weather_summary,
+        advisory: res.action_advisory,
+        ...inputs
+    });
+    pdfBtn.href = `/download_pdf?${queryParams.toString()}`;
+    
+    // 3. Risk badge styling
+    const riskBadge = document.getElementById('output-risk-badge');
+    riskBadge.innerText = `${res.risk_level} Risk`;
+    riskBadge.className = 'result-risk-badge'; // reset
+    
+    // Remove old classes and add new class
+    document.body.className = ''; // reset classes on body
+    
+    const riskLower = res.risk_level.toLowerCase().replace(' ', '');
+    riskBadge.classList.add(`risk-${riskLower}`);
+    document.body.classList.add(`theme-${riskLower}`);
+    
+    // 4. Circular SVG Gauge filling
+    const gaugeFill = document.getElementById('gauge-fill');
+    const strokeDashOffset = 125.6 - (125.6 * res.probability);
+    gaugeFill.style.strokeDashoffset = strokeDashOffset;
+    
+    // Update gauge stroke color based on risk
+    const colors = {
+        'verylow': '#10b981',
+        'low': '#0ea5e9',
+        'moderate': '#f59e0b',
+        'high': '#f97316',
+        'critical': '#ef4444'
+    };
+    gaugeFill.setAttribute('stroke', colors[riskLower] || '#3b82f6');
+    
+    // Set timestamp
+    const now = new Date();
+    document.getElementById('output-timestamp').innerText = `Computed: ${now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+}
+
+/**
+ * Toggles result container views
+ * @param {string} state 'placeholder' | 'loading' | 'output'
+ */
+function showResultState(state) {
+    const placeholder = document.getElementById('result-placeholder');
+    const loading = document.getElementById('result-loading');
+    const output = document.getElementById('result-output');
+    
+    placeholder.classList.remove('active');
+    loading.classList.remove('active');
+    output.classList.remove('active');
+    
+    if (state === 'placeholder') placeholder.classList.add('active');
+    if (state === 'loading') loading.classList.add('active');
+    if (state === 'output') output.classList.add('active');
+}
+
+/**
+ * Fetch logs history from backend and renders tables
+ */
+async function fetchHistory() {
+    try {
+        const response = await fetch('/history');
+        if (!response.ok) return;
+        const data = await response.json();
+        
+        const tbody = document.getElementById('history-tbody');
+        if (!tbody) return;
+        
+        if (data.length === 0) {
+            tbody.innerHTML = `
+                <tr class="empty-row">
+                    <td colspan="8">No prediction logs recorded yet. Execute a prediction to record a ledger entry.</td>
+                </tr>`;
+            return;
+        }
+        
+        tbody.innerHTML = ''; // Clear
+        
+        data.forEach(item => {
+            const tr = document.createElement('tr');
+            
+            // Format Risk class for badges
+            const riskLower = item.risk_level.toLowerCase().replace(' ', '');
+            
+            // Format parameters query string for individual row PDF downloads
+            const queryParams = new URLSearchParams({
+                verdict: item.verdict,
+                probability: item.probability,
+                risk_level: item.risk_level,
+                confidence: item.confidence,
+                summary: item.weather_summary,
+                advisory: item.action_advisory,
+                ...item.inputs
+            });
+            
+            tr.innerHTML = `
+                <td>${item.timestamp}</td>
+                <td><span style="font-weight: 500; font-size: 13px; color: var(--color-primary);">${item.model_name || 'Random Forest'}</span></td>
+                <td>${item.inputs.River_Level}m</td>
+                <td>${item.inputs.Seasonal_Rainfall}mm</td>
+                <td>${item.inputs.Humidity}%</td>
+                <td><strong>${(item.probability * 100).toFixed(1)}%</strong></td>
+                <td><span class="history-badge risk-${riskLower}">${item.risk_level}</span></td>
+                <td>${item.probability >= 0.65 ? '<i class="fa-solid fa-cloud-showers-heavy text-accent" style="color: #ef4444 !important;"></i> Flood' : '<i class="fa-solid fa-sun" style="color: #10b981"></i> Safe'}</td>
+                <td>
+                    <a href="/download_pdf?${queryParams.toString()}" class="history-btn-pdf" title="Download PDF Dispatch" target="_blank">
+                        <i class="fa-solid fa-file-pdf"></i>
+                    </a>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+        
+        // Update dashboard count if element exists
+        const countSpan = document.getElementById('stats-total-runs');
+        if (countSpan) {
+            countSpan.innerText = data.length;
+        }
+        
+        // Update general status dashboard badge if element exists
+        const statusSpan = document.getElementById('overall-status-value');
+        if (statusSpan && data.length > 0) {
+            const latest = data[0];
+            statusSpan.innerText = latest.risk_level;
+            
+            statusSpan.className = 'stats-value'; // reset
+            if (latest.risk_level === 'Critical') statusSpan.classList.add('text-critical');
+            else if (latest.risk_level === 'High') statusSpan.classList.add('text-high');
+            else if (latest.risk_level === 'Moderate') statusSpan.classList.add('text-warning');
+            else if (latest.risk_level === 'Low') statusSpan.classList.add('text-accent');
+            else statusSpan.classList.add('text-success');
+        }
+        
+    } catch (e) {
+        console.error("Failed to load history ledger:", e);
+    }
+}
