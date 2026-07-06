@@ -119,12 +119,16 @@ Interactive flood maps
 Continuous model retraining
 Mobile application
 Automatic flood alerts
+
+
 👥 Team Members
 Name	Role
 Saksham	Team Lead
 Akshaya Sowmya Banka	Team Member
 Avinash	Team Member
 Rihana	Team Member
+
+
 📄 License
 Developed for academic purposes as part of the SmartBridge Internship.
 
